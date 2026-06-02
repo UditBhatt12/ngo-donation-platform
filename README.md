@@ -343,7 +343,7 @@ Licensed under the ISC License.
 
 ## 👥 Contributors
 
-* Udit Bhatt
+* Udit Prakash Bhatt
 * Prathamesh Amrutkar
 
 ---
