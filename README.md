@@ -1,4 +1,5 @@
 NGO Registration and Donation Management System
+
 A comprehensive web application for managing NGO registrations and processing donations with integrated payment gateway support. Built with Node.js, Express, MongoDB, and PayHere payment integration.
 
 🎯 Features
@@ -8,6 +9,7 @@ Donation Management: Users can make donations through integrated PayHere payment
 Personal Dashboard: View donation history, transaction status, and account information
 PDF Receipt Generation: Download official donation receipts as PDF files
 Profile Settings: Update profile information and change password
+
 Admin Features
 Admin Dashboard: Comprehensive dashboard with statistics and analytics
 User Management: View all registered users, filter by role, and manage user accounts
@@ -16,6 +18,7 @@ Real-time Notifications: Get notified about new user registrations and donations
 Analytics & Charts: Visual representation of donation trends (last 7 days and last 30 days)
 Export Functionality: Export user data to CSV format
 PDF Reports: Generate comprehensive donation reports in PDF format
+
 Superadmin Features
 Role Management: Promote users to admin role or remove admin privileges
 Full System Access: Complete control over the system
@@ -27,6 +30,7 @@ Authentication: Express Sessions, bcryptjs
 Payment Gateway: PayHere (Sri Lanka)
 PDF Generation: PDFKit
 Security: MD5 hashing for payment verification
+
 📋 Prerequisites
 Before you begin, ensure you have the following installed:
 
@@ -34,6 +38,7 @@ Node.js (v14 or higher)
 npm (Node Package Manager)
 MongoDB Atlas account (or local MongoDB instance)
 PayHere merchant account (for payment processing)
+
 🚀 Installation
 Clone the repository bash git clone https://github.com/amaan-ee-iitr/NGO-Registration-and-Donation-Management-System cd NGO-Registration-and-Donation-Management-System
 
