@@ -11,8 +11,9 @@ const app = express();
 // --- 1. CONFIGURATION & MIDDLEWARE ---
 
 // 👇 PAYHERE CREDENTIALS
-const MERCHANT_ID = '1233636';
-const MERCHANT_SECRET = 'MzIxMDk2MTE2MDM3NDU2ODkxMjYxNTc4NzgyOTY0MjA0NTMxODM=';
+const MERCHANT_ID = process.env.PAYHERE_MERCHANT_ID;
+const MERCHANT_SECRET = process.env.PAYHERE_MERCHANT_SECRET;
+
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -296,7 +297,6 @@ app.get('/receipt/:id', async (req, res) => {
 
 
 // --- SETTINGS ROUTES ---
-
 app.get('/settings', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
     const user = await User.findById(req.session.userId);
@@ -305,11 +305,27 @@ app.get('/settings', async (req, res) => {
 
 app.post('/settings', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
-    const { name, newPassword } = req.body;
+
+    const { name, currentPassword, newPassword } = req.body;
     const user = await User.findById(req.session.userId);
 
     if (name) user.name = name;
+
+    // ✅ Change password only if user entered newPassword
     if (newPassword && newPassword.trim() !== "") {
+
+        // ❌ current password required
+        if (!currentPassword || currentPassword.trim() === "") {
+            return res.render('settings', { user, message: "❌ Enter current password to change password!" });
+        }
+
+        // ✅ verify current password
+        const ok = await bcrypt.compare(currentPassword, user.password);
+        if (!ok) {
+            return res.render('settings', { user, message: "❌ Current password is wrong!" });
+        }
+
+        // ✅ update password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
     }
