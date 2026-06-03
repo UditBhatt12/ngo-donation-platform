@@ -5,7 +5,7 @@ const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const PDFDocument = require('pdfkit');
 const md5 = require('md5'); // ⚡ Required for PayHere Security
-const path = require('path'); // <--- CRITICAL FIX 1: Import 'path' module
+const path = require('path'); 
 const app = express();
 
 // --- 1. CONFIGURATION & MIDDLEWARE ---
@@ -13,7 +13,6 @@ const app = express();
 // 👇 PAYHERE CREDENTIALS
 const MERCHANT_ID = process.env.PAYHERE_MERCHANT_ID;
 const MERCHANT_SECRET = process.env.PAYHERE_MERCHANT_SECRET;
-
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -27,9 +26,8 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json()); // ⚡ Required for reading JSON from frontend fetch
 
-// <--- CRITICAL FIX 2: Serve Static Files (Images/CSS)
+// Serve Static Files (Images/CSS)
 app.use(express.static(path.join(__dirname, 'public')));
-// ----------------------------------------------------
 
 // Set up Sessions
 app.use(session({
@@ -37,7 +35,6 @@ app.use(session({
     resave: false,
     saveUninitialized: false
 }));
-
 
 // --- ✅ SUPERADMIN / ADMIN MIDDLEWARES ---
 const requireLogin = (req, res, next) => {
@@ -57,7 +54,6 @@ const requireSuperAdmin = (req, res, next) => {
     return res.send("Access Denied: Superadmin Only");
 };
 
-
 // --- 2. DATABASE MODELS ---
 
 // User Schema
@@ -65,10 +61,7 @@ const userSchema = new mongoose.Schema({
     name: String,
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
-
-    // ✅ UPDATED: added superadmin
     role: { type: String, default: 'user', enum: ['user', 'admin', 'superadmin'] },
-
     registeredAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
@@ -92,7 +85,6 @@ const notificationSchema = new mongoose.Schema({
 });
 const Notification = mongoose.model('Notification', notificationSchema);
 
-
 // --- 3. ROUTES ---
 
 // Home Page
@@ -100,9 +92,7 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
-
 // --- AUTHENTICATION ---
-
 app.get('/register', (req, res) => {
     res.render('register');
 });
@@ -141,7 +131,6 @@ app.post('/login', async (req, res) => {
 
         if (user.role === 'admin' || user.role === 'superadmin') res.redirect('/admin');
         else res.redirect('/dashboard');
-
     } else {
         res.send("Invalid email or password");
     }
@@ -153,9 +142,7 @@ app.get('/logout', (req, res) => {
     });
 });
 
-
 // --- USER FEATURES (DASHBOARD & PAYHERE PAYMENT) ---
-
 app.get('/dashboard', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
 
@@ -165,7 +152,7 @@ app.get('/dashboard', async (req, res) => {
     res.render('dashboard', { user, donations });
 });
 
-// ⚡ NEW: Generate Security Hash for PayHere (Called by Frontend)
+// ⚡ Generate Security Hash for PayHere (Called by Frontend)
 app.post('/get-hash', async (req, res) => {
     if (!req.session.userId) return res.status(401).send("Unauthorized");
 
@@ -195,7 +182,7 @@ app.post('/get-hash', async (req, res) => {
     });
 });
 
-// ⚡ NEW: Payment Success Return URL
+// ⚡ Payment Success Return URL
 app.get('/payment/success', async (req, res) => {
     const { order_id } = req.query;
 
@@ -216,7 +203,7 @@ app.get('/payment/success', async (req, res) => {
     res.redirect('/dashboard');
 });
 
-// ⚡ NEW: Payment Notify URL (Webhook)
+// ⚡ Payment Notify URL (Webhook)
 app.post('/payment/notify', async (req, res) => {
     const {
         merchant_id,
@@ -253,7 +240,6 @@ app.post('/payment/notify', async (req, res) => {
 
     res.status(200).send('OK');
 });
-
 
 // 📄 GENERATE RECEIPT PDF (USER)
 app.get('/receipt/:id', async (req, res) => {
@@ -295,7 +281,6 @@ app.get('/receipt/:id', async (req, res) => {
     }
 });
 
-
 // --- SETTINGS ROUTES ---
 app.get('/settings', async (req, res) => {
     if (!req.session.userId) return res.redirect('/login');
@@ -311,21 +296,16 @@ app.post('/settings', async (req, res) => {
 
     if (name) user.name = name;
 
-    // ✅ Change password only if user entered newPassword
     if (newPassword && newPassword.trim() !== "") {
-
-        // ❌ current password required
         if (!currentPassword || currentPassword.trim() === "") {
             return res.render('settings', { user, message: "❌ Enter current password to change password!" });
         }
 
-        // ✅ verify current password
         const ok = await bcrypt.compare(currentPassword, user.password);
         if (!ok) {
             return res.render('settings', { user, message: "❌ Current password is wrong!" });
         }
 
-        // ✅ update password
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
     }
@@ -333,7 +313,6 @@ app.post('/settings', async (req, res) => {
     await user.save();
     res.render('settings', { user, message: "✅ Profile Updated Successfully!" });
 });
-
 
 // --- ✅ SUPERADMIN ROLE CONTROL ROUTES ---
 
@@ -346,7 +325,7 @@ app.post('/superadmin/make-admin/:id', requireSuperAdmin, async (req, res) => {
     user.role = 'admin';
     await user.save();
 
-    res.redirect('/admin'); // ✅ redirect back to dashboard
+    res.redirect('/admin'); 
 });
 
 // Superadmin can remove admin and make user
@@ -358,20 +337,16 @@ app.post('/superadmin/remove-admin/:id', requireSuperAdmin, async (req, res) => 
     user.role = 'user';
     await user.save();
 
-    res.redirect('/admin'); // ✅ redirect back to dashboard
+    res.redirect('/admin');
 });
 
-
-// --- ADMIN FEATURES (DASHBOARD, REPORTS, SORTS) ---
+// --- ADMIN FEATURES (DASHBOARD, REPORTS, SORTS, DELETIONS) ---
 app.get('/admin', requireAdmin, async (req, res) => {
-
-    // 1. FILTER LOGIC
     let userFilter = {};
     if (req.query.role && req.query.role !== 'all') {
         userFilter.role = req.query.role;
     }
 
-    // 2. SORT LOGIC
     const sortBy = req.query.sortBy || 'dateDesc';
     let sortQuery = {};
     if (sortBy === 'dateDesc') sortQuery = { date: -1 };
@@ -379,14 +354,11 @@ app.get('/admin', requireAdmin, async (req, res) => {
     else if (sortBy === 'amountDesc') sortQuery = { amount: -1 };
     else if (sortBy === 'amountAsc') sortQuery = { amount: 1 };
 
-    // 3. FETCH DATA
     const users = await User.find(userFilter);
     const donations = await Donation.find({}).populate('userId', 'name email').sort(sortQuery);
 
-    // 🔔 Fetch Last 5 Notifications
     const notifications = await Notification.find().sort({ date: -1 }).limit(5);
 
-    // 4. CHART DATA LOGIC
     const allDonationsForCharts = await Donation.find({});
     const last30DaysLabels = [], last30DaysData = [], last7DaysLabels = [], last7DaysData = [];
     const today = new Date();
@@ -426,10 +398,37 @@ app.get('/admin', requireAdmin, async (req, res) => {
             days30: { labels: last30DaysLabels, data: last30DaysData },
             days7: { labels: last7DaysLabels, data: last7DaysData }
         },
-
-        // ✅ NEW (only for buttons)
         isSuperAdmin: req.session.role === 'superadmin'
     });
+});
+
+// Admin can delete a user
+app.post('/admin/delete-user/:id', requireAdmin, async (req, res) => {
+    try {
+        const userToDelete = await User.findById(req.params.id);
+
+        if (!userToDelete) {
+            return res.status(404).send("User not found");
+        }
+
+        if (userToDelete.role === 'superadmin') {
+            return res.status(403).send("Access Denied: Cannot delete a superadmin.");
+        }
+
+        if (userToDelete._id.toString() === req.session.userId) {
+            return res.status(403).send("Action Denied: You cannot delete your own account.");
+        }
+
+        await User.findByIdAndDelete(req.params.id);
+
+        // Optional: Delete user's donations if you don't want orphaned data
+        // await Donation.deleteMany({ userId: req.params.id });
+
+        res.redirect('/admin'); 
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).send("Internal Server Error");
+    }
 });
 
 // Clear Notifications
